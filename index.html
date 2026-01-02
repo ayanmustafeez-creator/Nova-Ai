@@ -1,0 +1,338 @@
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nova 4.0 AI — Created by Ayan</title>
+
+<style>
+body {
+  margin: 0;
+  background: black;
+  color: #0ff;
+  font-family: monospace;
+  overflow: hidden;
+}
+
+#boot {
+  position: fixed;
+  inset: 0;
+  background: black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  font-size: 22px;
+  letter-spacing: 2px;
+}
+
+#radar {
+  width: 150px;
+  height: 150px;
+  border: 2px solid #0ff;
+  border-radius: 50%;
+  box-shadow: 0 0 40px #0ff;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+#radar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: conic-gradient(rgba(0,255,255,0.5), transparent 90deg);
+  animation: spin 1.6s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+#bootBar {
+  width: 70%;
+  height: 6px;
+  border: 1px solid #0ff;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+#bootFill {
+  width: 0;
+  height: 100%;
+  background: #0ff;
+  animation: load 3s forwards;
+}
+
+@keyframes load {
+  100% { width: 100%; }
+}
+
+#ui {
+  display: none;
+  width: 95%;
+  max-width: 500px;
+  height: 82vh;
+  margin: auto;
+  margin-top: 7vh;
+  border: 1px solid #0ff;
+  border-radius: 12px;
+  box-shadow: 0 0 80px #0ff, 0 0 120px magenta;
+  background: rgba(0,20,40,0.3);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 5;
+}
+
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.msg {
+  padding: 12px;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: 1px solid;
+  font-size: 15px;
+}
+
+.user {
+  border-color: #0ff;
+  background: rgba(0,255,255,0.06);
+  text-align: right;
+  color: #0ff;
+}
+
+.nova {
+  border-color: magenta;
+  background: rgba(255,0,255,0.22);
+  text-align: left;
+  color: white;
+  animation: glitch 0.28s;
+}
+
+@keyframes glitch {
+  0% { transform: skewX(14deg); }
+  25% { transform: skewX(-14deg); }
+  50% { transform: skewX(4deg); }
+  100% { transform: none; }
+}
+
+#inputArea {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+input {
+  flex: 1;
+  padding: 14px;
+  background: #000c;
+  border: 1px solid #0ff;
+  border-radius: 6px;
+  color: #0ff;
+  font-size: 16px;
+  outline: none;
+}
+
+button {
+  padding: 14px 18px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#sendBtn { background: #0ff; color: black; }
+#voiceBtn { background: magenta; color: white; }
+
+#holoEffect {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(0,255,255,0.06), transparent 75%);
+  pointer-events: none;
+  z-index: 3;
+  animation: holoPulse 3s infinite alternate;
+}
+
+@keyframes holoPulse {
+  0% { opacity: 0.3; }
+  100% { opacity: 0.7; }
+}
+
+canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+</style>
+</head>
+
+<body>
+
+<div id="boot">
+  <div id="radar"></div>
+  <div>Nova 4.0 System Booting...</div>
+  <div id="bootBar"><div id="bootFill"></div></div>
+</div>
+
+<canvas id="matrix"></canvas>
+
+<div id="ui">
+  <div id="holoEffect"></div>
+  <div id="messages"></div>
+  <div id="inputArea">
+    <button id="voiceBtn">🎤</button>
+    <input id="msgInput" placeholder="Speak or type command...">
+    <button id="sendBtn">Send</button>
+  </div>
+  <div style="font-size:12px;text-align:center;color:magenta;margin-top:8px">
+    ⚡ Created by Ayan ⚡
+  </div>
+</div>
+
+<script>
+// ---- Boot Screen Fix ----
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    boot.style.opacity = "0";
+    setTimeout(() => {
+      boot.style.display = "none";
+      ui.style.display = "flex";
+    }, 600);
+  }, 3200);
+});
+
+// ---- Matrix Animation ----
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+resize();
+window.onresize = resize;
+
+let columns = Math.floor(canvas.width / 20);
+let drops = new Array(columns).fill(0);
+
+function drawMatrix() {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#0ff";
+  ctx.font = "16px monospace";
+
+  for (let i = 0; i < columns; i++) {
+    let char = String.fromCharCode(33 + Math.random() * 94);
+    ctx.fillText(char, i * 20, drops[i] * 20);
+
+    if (drops[i] * 20 > canvas.height || Math.random() > 0.98) {
+      drops[i] = 0;
+    }
+    drops[i]++;
+  }
+  requestAnimationFrame(drawMatrix);
+}
+
+drawMatrix();
+
+// ---- UI Chat System ----
+function addMessage(text, sender) {
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "msg " + sender;
+  msgDiv.textContent = text;
+  messages.appendChild(msgDiv);
+  msgDiv.scrollIntoView();
+  if (sender === "nova") speak(text);
+}
+
+// ---- AI Reply Engine ----
+async function novaReply(text) {
+  const lower = text.toLowerCase();
+
+  if (!isNaN(text)) {
+    let n = Number(text);
+    return `Square of ${n} is ${n*n} and Cube of ${n} is ${n*n*n}`;
+  }
+  if (lower.includes("cube of")) {
+    let n = lower.replace("cube of","").trim();
+    if (!isNaN(n)) {
+      let x = Number(n);
+      return `Cube of ${x} is ${x*x*x}`;
+    }
+  }
+  if (lower.includes("square of")) {
+    let n = lower.replace("square of","").trim();
+    if (!isNaN(n)) {
+      let x = Number(n);
+      return `Square of ${x} is ${x*x}`;
+    }
+  }
+  if (lower.match(/^[0-9+\-*/().\s]+$/)) {
+    try { return "Result is " + eval(text); } catch { return "Math error"; }
+  }
+
+  if (lower === "open youtube") { window.open("https://youtube.com"); return "Opening YouTube"; }
+  if (lower === "open google") { window.open("https://google.com"); return "Opening Google"; }
+  if (lower === "open chatgpt") { window.open("https://chat.openai.com"); return "Opening ChatGPT"; }
+
+  if (lower.includes("time")) return "Current time is " + new Date().toLocaleTimeString();
+  if (lower.includes("date")) return "Today's date is " + new Date().toLocaleDateString();
+
+  return "Command received, Ayan. System executing.";
+}
+
+// ---- Male Voice Output ----
+let synth = window.speechSynthesis;
+function speak(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  const voices = synth.getVoices();
+  const male = voices.find(v => v.name.toLowerCase().includes("male"));
+  if (male) utter.voice = male;
+  synth.speak(utter);
+}
+
+// ---- Event Bindings ----
+const boot = document.getElementById("boot");
+const ui = document.getElementById("ui");
+const messages = document.getElementById("messages");
+const msgInput = document.getElementById("msgInput");
+const sendBtn = document.getElementById("sendBtn");
+const voiceBtn = document.getElementById("voiceBtn");
+
+sendBtn.addEventListener("click", async () => {
+  let text = msgInput.value.trim();
+  if (!text) return;
+  addMessage(text, "user");
+  let reply = await novaReply(text);
+  addMessage(reply, "nova");
+  msgInput.value = "";
+});
+
+// ---- Mic Fix ----
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+if (SR) {
+  const recognition = new SR();
+  recognition.lang = "en-IN";
+  recognition.onresult = async (e) => {
+    let transcript = e.results[0][0].transcript.trim();
+    addMessage(transcript, "user");
+    let reply = await novaReply(transcript);
+    addMessage(reply, "nova");
+  };
+  voiceBtn.addEventListener("click", () => recognition.start());
+} else {
+  addMessage("Mic not supported on this browser.", "nova");
+}
+</script>
+
+</body>
+</html>
